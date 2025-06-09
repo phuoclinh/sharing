@@ -34,6 +34,6 @@ def copy_file(from_bucket, from_path, to_path, client):
 
     resp = client.copy_object(bucket=to_bucket, key=to_path, src_bucket=from_bucket, src_key=from_path)
     if resp.status_code == 200:
-        client.delete_object('bucket-test', 'src-object')
+        client.delete_object(from_bucket, from_path)
     else:
         log_info("cannot copy {from_bucket}/{from_path} -----> {to_bucket}/{to_path}")
