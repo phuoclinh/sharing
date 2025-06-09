@@ -1,0 +1,39 @@
+import tos
+from app_utils import get_dest_file_path
+from config_utils import get_destination_bucket, get_as, get_sk, get_region, get_endpoint
+from log_utils import log_info, log_warning
+
+
+def handler(event, context):
+    log_info("receive event")
+    _data = event.get('data', {})
+    _events = _data.get('events', [])
+    if len(_events) == 0:
+        return
+
+    try:
+        client = tos.TosClientV2(ak=get_as(), sk=get_sk(), endpoint=get_endpoint(), region=get_region())
+        for _event in _events:
+            _tos = _event.get('tos', {})
+            _bucket = _tos.get('bucket', {})
+            _bucket_name = _bucket.get('name', None)
+            _object = _tos.get('object', {})
+            _key = _object.get('key', None)
+            if _key is not None and _bucket_name is not None:
+                _dest_path = get_dest_file_path(_key)
+                if _dest_path is not None:
+                    copy_file(_bucket_name, _key, _dest_path, client)
+    except Exception as e:
+        log_warning(f"process data fail {context} - {repr(e)}")
+        return None
+
+
+def copy_file(from_bucket, from_path, to_path, client):
+    to_bucket = get_destination_bucket()
+    log_info(f"copy {from_bucket}/{from_path} -----> {to_bucket}/{to_path}")
+
+    resp = client.copy_object(bucket=to_bucket, key=to_path, src_bucket=from_bucket, src_key=from_path)
+    if resp.status_code == 200:
+        client.delete_object('bucket-test', 'src-object')
+    else:
+        log_info("cannot copy {from_bucket}/{from_path} -----> {to_bucket}/{to_path}")
