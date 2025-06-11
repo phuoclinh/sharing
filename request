@@ -1,0 +1,37 @@
+import requests
+import os
+
+
+def handler(event, context):
+    _data = event.get('data', {})
+    _events = _data.get('events', [])
+    if len(_events) == 0:
+        return
+
+    CMS_URL = 'https://sd138mgid4km1jr82oib0.apigateway-ap-southeast-1.apigw-byteplus.com/drop-event'
+
+    try:
+        for _event in _events:
+            _tos = _event.get('tos', {})
+            _object = _tos.get('object', {})
+            _key = _object.get('key', None)
+            if _key is not None:
+                rs = request_post(url=CMS_URL, data=_key)
+                if rs is True:
+                    print(f'OK process file -----------> {_key}')
+                else:
+                    print(f'FAIL process file -----------> {_key}')
+
+    except Exception as e:
+        print(f'process data error {repr(e)}')
+        return None
+
+
+def request_post(url, data):
+    try:
+        res = requests.post(url=url, json=data)
+        if 200 <= res.status_code <= 300:
+            return True
+    except Exception as e:
+        print(f'post data error {repr(e)}')
+        return False
