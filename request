@@ -34,4 +34,4 @@ def request_post(url, data):
             return True
     except Exception as e:
         print(f'post data error {repr(e)}')
-        return False
+    return False
