@@ -20,8 +20,8 @@ def trigger_workflow(vid, wf_id, callback_info):
         req.CallbackArgs = json.dumps(callback_info)
         resp = vod_service.start_workflow(req)
         if resp.ResponseMetadata.Error.Code == '':
-            log_info(f'triggered workflow job-id: {resp.Result.Data[0].JobId} for {wf_id} - more {resp}')
-            return resp.Result.Data[0].JobId
+            log_info(f'triggered workflow job-id: {resp.Result.RunId} for {wf_id} - more {resp}')
+            return resp.Result.RunId
         else:
             log_warning(f'cannot trigger {wf_id} for {vid}. RequestId: {resp.ResponseMetadata.RequestId}   Error: {resp.ResponseMetadata.Error}')
             return None
