@@ -1,0 +1,30 @@
+import json
+from utils.config_utils import get_sk, get_ak
+from utils.log_utils import log_warning, log_info
+from byteplus_sdk.vod.VodService import VodService
+from byteplus_sdk.vod.models.request.request_vod_pb2 import VodStartWorkflowRequest
+from byteplus_sdk.vod.models.business.vod_workflow_pb2 import WorkflowParams
+
+
+def trigger_workflow(vid, wf_id, callback_info):
+    vod_service = VodService()
+    vod_service.set_ak(get_ak())
+    vod_service.set_sk(get_sk())
+
+    try:
+        req = VodStartWorkflowRequest()
+        req.Vid = vid
+        req.TemplateId = wf_id
+        req.Input.MergeFrom(WorkflowParams())
+        req.Priority = 0
+        req.CallbackArgs = json.dumps(callback_info)
+        resp = vod_service.start_workflow(req)
+        if resp.ResponseMetadata.Error.Code == '':
+            log_info(f'triggered workflow job-id: {resp.Result.Data[0].JobId} for {wf_id} - more {resp}')
+            return resp.Result.Data[0].JobId
+        else:
+            log_warning(f'cannot trigger {wf_id} for {vid}. RequestId: {resp.ResponseMetadata.RequestId}   Error: {resp.ResponseMetadata.Error}')
+            return None
+    except Exception as e:
+        log_warning(f'cannot trigger {wf_id} for {vid} exp {repr(e)}')
+        return None
